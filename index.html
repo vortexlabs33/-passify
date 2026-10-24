@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>passify — Premium Offline-First CBT Engine</title>
+    <!-- PWA Manifest Link for Mobile App Installation -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root[data-theme="dark"] {
+            --bg-deep: #060913;
+            --surface: rgba(255, 255, 255, 0.05);
+            --surface-hover: rgba(255, 255, 255, 0.09);
+            --border: rgba(255, 255, 255, 0.1);
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --accent: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --radius: 20px;
+        }
+
+        :root[data-theme="light"] {
+            --bg-deep: #f1f5f9;
+            --surface: rgba(255, 255, 255, 0.85);
+            --surface-hover: rgba(255, 255, 255, 1);
+            --border: rgba(0, 0, 0, 0.1);
+            --primary: #4f46e5;
+            --primary-glow: rgba(79, 70, 229, 0.2);
+            --accent: #059669;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --danger: #dc2626;
+            --radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 440px;
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+            min-height: 85vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .screen {
+            display: none;
+            flex: 1;
+            padding: 24px;
+            flex-direction: column;
+            animation: fadeIn 0.3s ease-in-out;
+            overflow-y: auto;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .top-nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .offline-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent);
+            background: rgba(16, 185, 129, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .theme-toggle-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .app-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .app-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #818cf8, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .app-header p {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .attribution-text {
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+            font-weight: 600;
+        }
+
+        .menu-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .menu-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 16px 18px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .menu-card:hover, .menu-card:active {
+            background: var(--surface-hover);
+            border-color: rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .menu-card i {
+            font-size: 20px;
+            color: #818cf8;
+            width: 38px;
+            height: 38px;
+            background: rgba(99, 102, 241, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+
+        .menu-card .info h3 {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .menu-card .info p {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .exam-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .exam-btn {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(16, 185, 129, 0.1));
+            border: 1px solid var(--border);
+            padding: 18px;
+            border-radius: 16px;
+            color: var(--text-main);
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+
+        .exam-btn:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .subject-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 14px;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .subject-card:hover {
+            background: var(--surface-hover);
+            border-color: var(--primary);
+        }
+
+        .subject-card i {
+            font-size: 22px;
+            color: #34d399;
+            margin-bottom: 6px;
+        }
+
+        .subject-card span {
+            font-size: 12px;
+            font-weight: 600;
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 14px 16px;
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 15px;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            padding: 16px;
+            border-radius: 14px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+            transition: 0.2s;
+            margin-top: auto;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-muted);
+            cursor: pointer;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            color: var(--text-main);
+        }
+
+        .cbt-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+            font-size: 12px;
+            color: var(--text-muted);
+            background: var(--surface);
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .timer-badge {
+            color: #f59e0b;
+            font-weight: 700;
+        }
+
+        .cbt-action-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .bookmark-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .bookmark-btn.active {
+            background: rgba(245, 158, 11, 0.15);
+            border-color: #f59e0b;
+            color: #f59e0b;
+        }
+
+        .question-box {
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .option-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 14px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option-item input {
+            accent-color: var(--primary);
+        }
+
+        .option-item.selected {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--primary);
+        }
+
+        .cbt-nav-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 14px;
+            border-radius: 12px;
+            color: var(--text-main);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .score-card-box {
+            text-align: center;
+            padding: 24px 16px;
+            background: var(--surface);
+            border-radius: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .score-card-box h2 {
+            font-size: 38px;
+            font-weight: 800;
+            color: #34d399;
+            margin: 8px 0;
+        }
+
+        .review-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .review-item p {
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+
+        <!-- SCREEN 1: HOME MENU -->
+        <div id="screen-home" class="screen active">
+            <div class="top-nav-bar">
+                <div class="offline-badge"><i class="fa-solid fa-wifi" style="transform: rotate(135deg);"></i> Offline Ready</div>
+                <button class="theme-toggle-btn" onclick="toggleTheme()" id="theme-toggle-icon"><i class="fa-solid fa-sun"></i></button>
+            </div>
+
+            <div class="app-header">
+                <h1>passify</h1>
+                <p>Offline-First Premium CBT & Learning Engine</p>
+                <div class="attribution-text">Developed by Vortex Labs (KLASH) on behalf of Sullab</div>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-card" onclick="goToScreen('screen-exam-select')">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <div class="info">
+                        <h3>CBT Practice Engine</h3>
+                        <p>Simulate UTME, WAEC, and NECO exams</p>
+                    </div>
+                </div>
+
+                <div class="menu-card" onclick="goToScreen('screen-analytics')">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <div class="info">
+                        <h3>Performance Analytics</h3>
+                        <p>Track your score history and progress</p>
+                    </div>
+                </div>
+
+                <div class="menu-card" onclick="goToScreen('screen-classes')">
+                    <i class="fa-solid fa-video"></i>
+                    <div class="info">
+                        <h3>Online Classes</h3>
+                        <p>Watch core topic video tutorials</p>
+                    </div>
+                </div>
+
+                <div class="menu-card" onclick="requestAppNotificationPermission()">
+                    <i class="fa-solid fa-bell" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);"></i>
+                    <div class="info">
+                        <h3>Study Reminders</h3>
+                        <p>Enable daily exam notification alerts</p>
+                    </div>
+                </div>
+
+                <div class="menu-card" onclick="goToScreen('screen-support')">
+                    <i class="fa-solid fa-headset"></i>
+                    <div class="info">
+                        <h3>Support / Contact</h3>
+                        <p>Get help and connect with support</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: EXAM BODY SELECTOR -->
+        <div id="screen-exam-select" class="screen">
+            <div class="back-link" onclick="goToScreen('screen-home')"><i class="fa-solid fa-arrow-left"></i> Back to Home</div>
+            <div class="app-header" style="text-align: left; margin-bottom: 16px;">
+                <h1>Select Exam Mode</h1>
+                <p>Choose single subject practice or full JAMB mock simulation</p>
+            </div>
+
+            <div class="exam-buttons">
+                <button class="exam-btn" onclick="goToScreen('screen-jamb-combo')" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(99, 102, 241, 0.1)); border-color: rgba(245, 158, 11, 0.4);">
+                    <div>
+                        <span style="font-size: 16px; font-weight: 800; display: block; color: #f59e0b;">JAMB 4-Subject Mock</span>
+                        <span style="font-size: 12px; color: var(--text-muted);">180 Questions • 2 Hours • Aggregate /400</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <button class="exam-btn" onclick="selectExam('UTME (JAMB)')">
+                    <span>UTME (JAMB) Single Subject</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <button class="exam-btn" onclick="selectExam('WAEC (SSCE)')">
+                    <span>WAEC (SSCE) Practice</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+                <button class="exam-btn" onclick="selectExam('NECO (SSCE)')">
+                    <span>NECO (SSCE) Practice</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 2.5: JAMB 4-SUBJECT COMBINATION CONFIG -->
+        <div id="screen-jamb-combo" class="screen">
+            <div class="back-link" onclick="goToScreen('screen-exam-select')"><i class="fa-solid fa-arrow-left"></i> Back</div>
+            <div class="app-header" style="text-align: left; margin-bottom: 16px;">
+                <h1>JAMB Mock Setup</h1>
+                <p>Select your 3 additional subjects (English Language is compulsory)</p>
+            </div>
+
+            <div class="form-group">
+                <label>Compulsory Subject 1</label>
+                <input type="text" class="form-control" value="English Language" disabled style="opacity: 0.8; font-weight: 700;">
+            </div>
+
+            <div class="form-group">
+                <label>Subject 2</label>
+                <select id="jamb-sub-2" class="form-control"></select>
+            </div>
+
+            <div class="form-group">
+                <label>Subject 3</label>
+                <select id="jamb-sub-3" class="form-control"></select>
+            </div>
+
+            <div class="form-group">
+                <label>Subject 4</label>
+                <select id="jamb-sub-4" class="form-control"></select>
+            </div>
+
+            <button class="btn-primary" onclick="startJambMockSession()">Start Official Mock (120 Mins)</button>
+        </div>
+
+        <!-- SCREEN 3: SUBJECT MATRIX -->
+        <div id="screen-subjects" class="screen">
+            <div class="back-link" onclick="goToScreen('screen-exam-select')"><i class="fa-solid fa-arrow-left"></i> Back</div>
+            <div class="app-header" style="text-align: left; margin-bottom: 16px;">
+                <h1 id="selected-exam-title">Subjects</h1>
+                <p>Pick from comprehensive subjects</p>
+            </div>
+
+            <div class="subject-grid" id="cbt-subject-grid"></div>
+        </div>
+
+        <!-- SCREEN 4: EXAM SETTINGS -->
+        <div id="screen-settings" class="screen">
+            <div class="back-link" onclick="goToScreen('screen-subjects')"><i class="fa-solid fa-arrow-left"></i> Back</div>
+            <div class="app-header" style="text-align: left; margin-bottom: 16px;">
+                <h1>Session Settings</h1>
+                <p id="settings-subject-label">Configure your practice session</p>
+            </div>
+
+            <div class="form-group">
+                <label>Number of Questions (5 to 150)</label>
+                <select id="setting-count" class="form-control">
+                    <option value="5">5 Questions (Quick Test)</option>
+                    <option value="10">10 Questions</option>
+                    <option value="25">25 Questions</option>
+                    <option value="50" selected>50 Questions (Standard)</option>
+                    <option value="100">100 Questions</option>
+                    <option value="150">150 Questions (Full Mock)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Timer Duration (Minutes)</label>
+                <select id="setting-time" class="form-control">
+                    <option value="5">5 Minutes</option>
+                    <option value="15">15 Minutes</option>
+                    <option value="30" selected>30 Minutes</option>
+                    <option value="60">60 Minutes (1 Hour)</option>
+                    <option value="0">Untimed Practice</option>
+                </select>
+            </div>
+
+            <button class="btn-primary" onclick="startCbtSession()">Start CBT Session</button>
+        </div>
+
+        <!-- SCREEN 5: CBT EXAM RUNNER -->
+        <div id="screen-cbt" class="screen">
+            <div class="cbt-top-bar">
+                <span id="cbt-q-counter">Question 1 of 50</span>
+                <span class="timer-badge" id="cbt-timer"><i class="fa-regular fa-clock"></i> 30:00</span>
+            </div>
+
+            <div class="cbt-action-row">
+                <button class="bookmark-btn" id="btn-bookmark" onclick="toggleBookmark()"><i class="fa-regular fa-bookmark"></i> Flag Question</button>
+                <button class="bookmark-btn" style="color: var(--danger); border-color: rgba(239,68,68,0.3);" onclick="confirmExitExam()"><i class="fa-solid fa-right-from-bracket"></i> Exit Exam</button>
+            </div>
+
+            <div id="cbt-content">
+                <div style="font-size: 11px; font-weight: 700; color: #818cf8; margin-bottom: 6px; text-transform: uppercase;" id="cbt-current-subject-tag">Subject</div>
+                <div class="question-box" id="question-text">Loading question...</div>
+                <div class="options-list" id="options-container"></div>
+            </div>
+
+            <div class="cbt-nav-buttons" id="cbt-nav-controls">
+                <button class="btn-secondary" id="btn-prev" onclick="prevQuestion()">Previous</button>
+                <button class="btn-primary" id="btn-next" onclick="nextQuestion()" style="margin-top:0;">Next</button>
+            </div>
+        </div>
+
+        <!-- SCREEN 6: SCORECARD -->
+        <div id="screen-scorecard" class="screen">
+            <div class="app-header">
+                <h1>Test Completed!</h1>
+                <p id="scorecard-subtitle">Here is your performance breakdown</p>
+            </div>
+
+            <div class="score-card-box">
+                <p style="color: var(--text-muted); font-size: 13px;" id="score-main-label">Scaled Score Percentage</p>
+                <h2 id="final-percentage-val">0%</h2>
+                <p id="final-score-fraction" style="font-size: 14px; font-weight: 600; color: var(--text-main);">Raw Score: 0/0</p>
+            </div>
+
+            <div style="margin-bottom: 16px;">
+                <h3 style="font-size: 15px; margin-bottom: 10px;">Question Explanations & Review</h3>
+                <div id="scorecard-review-list" style="max-height: 220px; overflow-y: auto;"></div>
+            </div>
+
+            <button class="btn-primary" onclick="goToScreen('screen-home')" style="margin-bottom: 10px;">Return to Home</button>
+            <button class="btn-secondary" onclick="goToScreen('screen-analytics')" style="width: 100%;">View Score History</button>
+        </div>
+
+        <!-- SCREEN 7: PERFORMANCE ANALYTICS -->
+        <div id="screen-analytics" class="screen">
+            <div class="back-link" onclick="goToScreen('screen-home')"><i class="fa-solid fa-arrow-left"></i> Home</div>
+            <div class="app-header" style="text-align: left; margin-bottom: 16px;">
+                <h1>Performance Analytics</h1>
+                <p>Your recent test history and growth</p>
+            </div>
+            <div id="analytics-history-list">
+                <p style="color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 0;">No test history recorded yet.</p>
+            </div>
+        </div>
+
+        <!-- SCREEN 8: ONLINE CLASSES -->
+        <div id="screen-classes" class="screen">
+            <div class="back-link" onclick="goToScreen('screen-home')"><i class="fa-solid fa-arrow-left"></i> Home</div>
+            <div class="app-header" style="text-align: left; margin-bottom: 16px;">
+                <h1>Online Masterclasses</h1>
+                <p>Select a subject to view core topic tutorials</p>
+            </div>
+            <div class="subject-grid" id="class-subject-grid"></div>
+        </div>
+
+        <!-- SCREEN 8.2: ONLINE CLASSES - TOPIC LIST -->
+        <div id="screen-class-topics" class="screen">
+            <div class="back-link" onclick="goToScreen('screen-classes')"><i class="fa-solid fa-arrow-left"></i> Back to Subjects</div>
+            <div class="app-header" style="text-align: left; margin-bottom: 16px;">
+                <h1 id="class-topic-title">Core Topics</h1>
+                <p>Tap a topic to watch the tutorial video</p>
+            </div>
+            <div class="menu-grid" id="class-topics-list"></div>
+        </div>
+
+        <!-- SCREEN 10: SUPPORT & CONTACT -->
+        <div id="screen-support" class="screen">
+            <div class="back-link" onclick="goToScreen('screen-home')"><i class="fa-solid fa-arrow-left"></i> Home</div>
+            <div class="app-header" style="text-align: left; margin-bottom: 16px;">
+                <h1>Support & Contact</h1>
+                <p>Get in touch or report an issue</p>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-card" onclick="window.location.href='mailto:Vortexlabs201@Gmail.com'">
+                    <i class="fa-solid fa-envelope" style="color: #6366f1; background: rgba(99, 102, 241, 0.1);"></i>
+                    <div class="info">
+                        <h3>Email Support</h3>
+                        <p>Vortexlabs201@Gmail.com</p>
+                    </div>
+                </div>
+                <div class="menu-card" onclick="window.open('https://wa.me/2348062112118?text=Hello%20Passify%20Support,%20I%20need%20help%20with...', '_blank')">
+                    <i class="fa-brands fa-whatsapp" style="color: #10b981; background: rgba(16, 185, 129, 0.1);"></i>
+                    <div class="info">
+                        <h3>WhatsApp Direct Chat</h3>
+                        <p>08062112118 (Chat with support)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const allSubjectsList = [
+            { name: 'English Language', icon: 'fa-book-open' },
+            { name: 'Mathematics', icon: 'fa-calculator' },
+            { name: 'Physics', icon: 'fa-atom' },
+            { name: 'Chemistry', icon: 'fa-flask' },
+            { name: 'Biology', icon: 'fa-dna' },
+            { name: 'Government', icon: 'fa-landmark' },
+            { name: 'Literature in English', icon: 'fa-feather' },
+            { name: 'Economics', icon: 'fa-chart-pie' },
+            { name: 'Commerce', icon: 'fa-store' },
+            { name: 'CRS', icon: 'fa-book-bible' },
+            { name: 'Islamic Studies (IRK)', icon: 'fa-mosque' },
+            { name: 'Financial Accounting', icon: 'fa-file-invoice-dollar' },
+            { name: 'Agricultural Science', icon: 'fa-seedling' },
+            { name: 'Geography', icon: 'fa-earth-africa' },
+            { name: 'Civic Education', icon: 'fa-scale-balanced' },
+            { name: 'Further Mathematics', icon: 'fa-square-root-variable' },
+            { name: 'History', icon: 'fa-monument' }
+        ];
+
+        const subjectMasterclasses = {
+            "English Language": [
+                { topic: "Lexis and Structure (Grammar Rules)", videoUrl: "https://www.youtube.com/results?search_query=WAEC+English+Lexis+and+Structure" },
+                { topic: "Oral English & Vowel/Consonant Sounds", videoUrl: "https://www.youtube.com/results?search_query=JAMB+Oral+English+masterclass" },
+                { topic: "Comprehension & Summary Writing", videoUrl: "https://www.youtube.com/results?search_query=WAEC+English+Comprehension+and+Summary" }
+            ],
+            "Mathematics": [
+                { topic: "Indices, Logarithms and Surds", videoUrl: "https://www.youtube.com/results?search_query=JAMB+Mathematics+Indices+and+Logarithms" },
+                { topic: "Quadratic Equations and Polynomials", videoUrl: "https://www.youtube.com/results?search_query=WAEC+Mathematics+Quadratic+Equations" },
+                { topic: "Matrices and Determinants", videoUrl: "https://www.youtube.com/results?search_query=Further+Math+Matrices+and+Determinants" },
+                { topic: "Trigonometry and Geometry", videoUrl: "https://www.youtube.com/results?search_query=JAMB+Mathematics+Trigonometry" }
+            ],
+            "Physics": [
+                { topic: "Kinematics and Projectile Motion", videoUrl: "https://www.youtube.com/results?search_query=Physics+Kinematics+projectile+motion+Nigeria" },
+                { topic: "Waves, Optics and Sound", videoUrl: "https://www.youtube.com/results?search_query=WAEC+Physics+Waves+and+Light" },
+                { topic: "Electricity and Magnetism (Ohm's Law)", videoUrl: "https://www.youtube.com/results?search_query=JAMB+Physics+Electricity+calculations" }
+            ],
+            "Chemistry": [
+                { topic: "Mole Concepts and Stoichiometry", videoUrl: "https://www.youtube.com/results?search_query=Chemistry+Mole+concept+calculations+WAEC" },
+                { topic: "Organic Chemistry (IUPAC & Alkanes)", videoUrl: "https://www.youtube.com/results?search_query=JAMB+Organic+Chemistry+masterclass" },
+                { topic: "Chemical Equilibrium and Rates", videoUrl: "https://www.youtube.com/results?search_query=Chemistry+Chemical+equilibrium+Le+Chatelier" }
+            ],
+            "Biology": [
+                { topic: "Cell Structure and Functions", videoUrl: "https://www.youtube.com/results?search_query=Biology+Cell+structure+and_organelles" },
+                { topic: "Genetics and Heredity (Mendelian Crosses)", videoUrl: "https://www.youtube.com/results?search_query=WAEC+Biology+Genetics+inheritance" },
+                { topic: "Ecology and Nutrient Cycles", videoUrl: "https://www.youtube.com/results?search_query=JAMB+Biology+Ecology" }
+            ],
+            "Government": [
+                { topic: "Constitutional Development in Nigeria", videoUrl: "https://www.youtube.com/results?search_query=Government+Nigerian+Constitutional+History+Clifford" },
+                { topic: "Arms of Government & Separation of Powers", videoUrl: "https://www.youtube.com/results?search_query=Government+Arms+of+Government+Executive+Legislature" },
+                { topic: "International Organizations (ECOWAS, AU, UN)", videoUrl: "https://www.youtube.com/results?search_query=Government+ECOWAS+AU+UN+JAMB" }
+            ],
+            "Literature in English": [
+                { topic: "Literary Appreciation & Figures of Speech", videoUrl: "https://www.youtube.com/results?search_query=Literature+in+English+Figures+of+speech" },
+                { topic: "Drama, Tragedy and Comedy Analysis", videoUrl: "https://www.youtube.com/results?search_query=Literature+in+English+Drama+elements" },
+                { topic: "Poetry Analysis & Rhyme Schemes", videoUrl: "https://www.youtube.com/results?search_query=WAEC+Literature+Poetry+analysis" }
+            ],
+            "Economics": [
+                { topic: "Demand and Supply Analysis", videoUrl: "https://www.youtube.com/results?search_query=Economics+Demand+and+Supply+calculations" },
+                { topic: "National Income Accounting & Inflation", videoUrl: "https://www.youtube.com/results?search_query=Economics+National+Income+and+Inflation" },
+                { topic: "Theory of Production and Cost", videoUrl: "https://www.youtube.com/results?search_query=Economics+Theory+of+production" }
+            ],
+            "Commerce": [
+                { topic: "Home and International Trade Documents", videoUrl: "https://www.youtube.com/results?search_query=Commerce+Documents+used+in+Home+Trade" },
+                { topic: "Forms of Business Organizations", videoUrl: "https://www.youtube.com/results?search_query=Commerce+Business+Units+Cooperative+Company" },
+                { topic: "Banking and Financial Institutions", videoUrl: "https://www.youtube.com/results?search_query=Commerce+Central+Bank+and_Commercial+Banks" }
+            ],
+            "CRS": [
+                { topic: "The Sovereignty and Creation of God", videoUrl: "https://www.youtube.com/results?search_query=CRS+Creation+account+Bible" },
+                { topic: "The Life, Ministry and Death of Jesus Christ", videoUrl: "https://www.youtube.com/results?search_query=CRS+Ministry+of+Jesus+Christ" },
+                { topic: "The Pauline Epistles and Christian Living", videoUrl: "https://www.youtube.com/results?search_query=CRS+Pauline+epistles+WAEC" }
+            ],
+            "Islamic Studies (IRK)": [
+                { topic: "Introduction to Quranic Surahs and Tafseer", videoUrl: "https://www.youtube.com/results?search_query=Islamic+Studies+Quran+surah+WAEC+JAMB" },
+                { topic: "The Hadith of Prophet Muhammad (PBUH)", videoUrl: "https://www.youtube.com/results?search_query=Islamic+Studies+Hadith+collection+WAEC" },
+                { topic: "Articles of Faith and Pillars of Islam", videoUrl: "https://www.youtube.com/results?search_query=IRK+Pillars+of_Islam+Articles+of_Faith" }
+            ],
+            "Financial Accounting": [
+                { topic: "The Accounting Equation and Double Entry", videoUrl: "https://www.youtube.com/results?search_query=Financial+Accounting+Double+entry+system" },
+                { topic: "Preparation of Trial Balance and Ledger", videoUrl: "https://www.youtube.com/results?search_query=Financial+Accounting+Trial+balance" },
+                { topic: "Manufacturing and Trading Accounts", videoUrl: "https://www.youtube.com/results?search_query=Financial+Accounting+Trading+Profit+Loss+Account" }
+            ],
+            "Agricultural Science": [
+                { topic: "Animal Nutrition and Livestock Production", videoUrl: "https://www.youtube.com/results?search_query=Agricultural+Science+Animal+Nutrition+livestock" },
+                { topic: "Soil Science and Profile", videoUrl: "https://www.youtube.com/results?search_query=Agricultural+Science+Soil+profile+and_properties" },
+                { topic: "Agricultural Economics and Farm Management", videoUrl: "https://www.youtube.com/results?search_query=Agricultural+Science+Farm+management" }
+            ],
+            "Geography": [
+                { topic: "Map Reading and Interpretation", videoUrl: "https://www.youtube.com/results?search_query=Geography+Map+reading+contours+scale" },
+                { topic: "Climatology and Weather Instruments", videoUrl: "https://www.youtube.com/results?search_query=Geography+Climatology+weather" },
+                { topic: "Rocks, Earthquakes and Volcanism", videoUrl: "https://www.youtube.com/results?search_query=Geography+Types+of_rocks+weathering" }
+            ],
+            "Civic Education": [
+                { topic: "Fundamental Human Rights & Democracy", videoUrl: "https://www.youtube.com/results?search_query=Civic+Education+Human+Rights+democracy" },
+                { topic: "Values: Integrity, Tolerance and Self-Reliance", videoUrl: "https://www.youtube.com/results?search_query=Civic+Education+Core+Nigerian+Values" },
+                { topic: "Public Agencies (EFCC, ICPC, NDLEA)", videoUrl: "https://www.youtube.com/results?search_query=Civic+Education+EFCC+ICPC+NDLEA" }
+            ],
+            "Further Mathematics": [
+                { topic: "Calculus: Differentiation and Integration", videoUrl: "https://www.youtube.com/results?search_query=Further+Math+Calculus+differentiation_integration" },
+                { topic: "Vectors and Mechanics", videoUrl: "https://www.youtube.com/results?search_query=Further+Math+Vectors+in_two_dimensions" },
+                { topic: "Permutation and Combination", videoUrl: "https://www.youtube.com/results?search_query=Further+Math+Permutations+and+Combinations" }
+            ],
+            "History": [
+                { topic: "The 1914 Amalgamation of Nigeria", videoUrl: "https://www.youtube.com/results?search_query=History+1914+Amalgamation+Lord+Lugard" },
+                { topic: "Pre-Colonial Societies (Oyo, Benin, Sokoto)", videoUrl: "https://www.youtube.com/results?search_query=History+Pre_colonial+Nigerian+societies" },
+                { topic: "Colonial Rule and Nationalism in Nigeria", videoUrl: "https://www.youtube.com/results?search_query=History+Nigerian+Nationalism+independence" }
+            ]
+        };
+
+        let currentExam = "";
+        let currentSubject = "";
+        let isJambMock = false;
+        let questions = [];
+        let currentIndex = 0;
+        let userAnswers = {};
+        let bookmarkedQuestions = {};
+        let scoreHistory = JSON.parse(localStorage.getItem('passify_scores') || '[]');
+        let timerInterval = null;
+        let timeLeft = 0;
+
+        window.onload = function() {
+            renderSubjectGrids();
+            populateJambDropdowns();
+        };
+
+        function requestAppNotificationPermission() {
+            if (!("Notification" in window)) {
+                alert("This browser/device does not support desktop/mobile notifications.");
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    alert("Study reminders enabled successfully! passify will keep you on track.");
+                    new Notification("passify Study Reminder", {
+                        body: "Your daily JAMB & WAEC CBT practice is ready. Let's crush those exams!",
+                        icon: "./icon-192.png"
+                    });
+                } else {
+                    alert("Notification permission was denied.");
+                }
+            });
+        }
+
+        function toggleTheme() {
+            let html = document.documentElement;
+            let icon = document.getElementById('theme-toggle-icon').querySelector('i');
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.setAttribute('data-theme', 'light');
+                icon.className = 'fa-solid fa-moon';
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                icon.className = 'fa-solid fa-sun';
+            }
+        }
+
+        function renderSubjectGrids() {
+            let cbtGrid = document.getElementById('cbt-subject-grid');
+            cbtGrid.innerHTML = allSubjectsList.map(sub => `
+                <div class="subject-card" onclick="selectSubject('${sub.name}')">
+                    <i class="fa-solid ${sub.icon}"></i>
+                    <span>${sub.name}</span>
+                </div>
+            `).join('');
+
+            let classGrid = document.getElementById('class-subject-grid');
+            classGrid.innerHTML = allSubjectsList.map(sub => `
+                <div class="subject-card" onclick="openClassTopics('${sub.name}')">
+                    <i class="fa-solid ${sub.icon}" style="color: #6366f1;"></i>
+                    <span>${sub.name}</span>
+                </div>
+            `).join('');
+        }
+
+        function populateJambDropdowns() {
+            let availableForMock = allSubjectsList.filter(s => s.name !== 'English Language');
+            let optionsHTML = availableForMock.map(sub => `<option value="${sub.name}">${sub.name}</option>`).join('');
+
+            document.getElementById('jamb-sub-2').innerHTML = optionsHTML;
+            document.getElementById('jamb-sub-3').innerHTML = optionsHTML;
+            document.getElementById('jamb-sub-4').innerHTML = optionsHTML;
+
+            document.getElementById('jamb-sub-2').value = "Mathematics";
+            document.getElementById('jamb-sub-3').value = "Physics";
+            document.getElementById('jamb-sub-4').value = "Chemistry";
+        }
+
+        function openClassTopics(subjectName) {
+            document.getElementById('class-topic-title').innerText = `${subjectName} Masterclass`;
+            let topicsListContainer = document.getElementById('class-topics-list');
+            
+            let topics = subjectMasterclasses[subjectName] || [
+                { topic: `${subjectName} General Revision`, videoUrl: `https://www.youtube.com/results?search_query=${subjectName}+tutorial+WAEC+JAMB` }
+            ];
+
+            topicsListContainer.innerHTML = topics.map(item => `
+                <div class="menu-card" onclick="window.open('${item.videoUrl}', '_blank')">
+                    <i class="fa-brands fa-youtube" style="color: #ef4444; background: rgba(239, 68, 68, 0.1);"></i>
+                    <div class="info">
+                        <h3>${item.topic}</h3>
+                        <p>Tap to watch video tutorial on YouTube</p>
+                    </div>
+                </div>
+            `).join('');
+
+            goToScreen('screen-class-topics');
+        }
+
+        function generateMathQuestions(count, subjectName = "Mathematics") {
+            let generated = [];
+            for (let i = 0; i < count; i++) {
+                let type = Math.floor(Math.random() * 4);
+                let q, options, answer, exp;
+
+                if (type === 0) {
+                    let a = Math.floor(Math.random() * 4) + 2;
+                    let b = Math.floor(Math.random() * 10) + 1;
+                    let x = Math.floor(Math.random() * 10) + 1;
+                    let c = a * x - b;
+                    q = `If ${a}x - ${b} = ${c}, find the value of x.`;
+                    let correct = x;
+                    options = [correct.toString(), (x + 1).toString(), Math.max(1, x - 2).toString(), (x + 3).toString()];
+                    exp = `To solve ${a}x - ${b} = ${c}, add ${b} to both sides to get ${a}x = ${c + b}, then divide by ${a} to get x = ${x}.`;
+                } else if (type === 1) {
+                    let p = (Math.floor(Math.random() * 5) + 1) * 10000;
+                    let r = Math.floor(Math.random() * 5) + 2;
+                    let t = Math.floor(Math.random() * 3) + 1;
+                    let si = (p * r * t) / 100;
+                    q = `Calculate simple interest on ₦${p.toLocaleString()} for ${t} yr(s) at ${r}% per annum.`;
+                    let correct = `₦${si.toLocaleString()}`;
+                    options = [correct, `₦${(si + 1000).toLocaleString()}`, `₦${Math.max(500, si - 1500).toLocaleString()}`, `₦${(si + 2500).toLocaleString()}`];
+                    exp = `Simple Interest formula is (P × R × T) / 100 = ₦${si.toLocaleString()}.`;
+                } else if (type === 2) {
+                    let l = Math.floor(Math.random() * 10) + 10;
+                    let w = Math.floor(Math.random() * 5) + 5;
+                    let peri = 2 * (l + w);
+                    q = `Find the perimeter of a rectangle with length ${l}m and width ${w}m.`;
+                    let correct = `${peri}m`;
+                    options = [correct, `${peri + 4}m`, `${Math.max(4, peri - 6)}m`, `${peri + 10}m`];
+                    exp = `Perimeter = 2(length + width) = 2(${l} + ${w}) = ${peri}m.`;
+                } else {
+                    let price = (Math.floor(Math.random() * 5) + 2) * 1000;
+                    let disc = 10;
+                    let finalPrice = price - (price * disc / 100);
+                    q = `An item priced at ₦${price.toLocaleString()} is sold at a ${disc}% discount. Find selling price.`;
+                    let correct = `₦${finalPrice.toLocaleString()}`;
+                    options = [correct, `₦${(finalPrice + 500).toLocaleString()}`, `₦${(finalPrice - 300).toLocaleString()}`, `₦${price.toLocaleString()}`];
+                    exp = `Discount is 10% of ₦${price}. Subtracting gives ₦${finalPrice.toLocaleString()}.`;
+                }
+
+                let correctOpt = options[0];
+                options.sort(() => 0.5 - Math.random());
+                answer = options.indexOf(correctOpt);
+
+                generated.push({ id: i + 1, subject: subjectName, question: q, options: options, answer: answer, explanation: exp });
+            }
+            return generated;
+        }
+
+        function generateEconomicsQuestions(count, subjectName = "Economics") {
+            let generated = [];
+            for (let i = 0; i < count; i++) {
+                let oldCPI = 100;
+                let newCPI = oldCPI + Math.floor(Math.random() * 25) + 5;
+                let rate = ((newCPI - oldCPI) / oldCPI) * 100;
+                let q = `If CPI rises from ${oldCPI} to ${newCPI}, calculate the inflation rate.`;
+                let correct = `${rate.toFixed(1)}%`;
+                let options = [correct, `${(rate + 5).toFixed(1)}%`, `${(rate - 2).toFixed(1)}%`, `${(rate + 10).toFixed(1)}%`];
+                let exp = `Inflation rate formula = [(New CPI - Old CPI) / Old CPI] × 100 = ${rate.toFixed(1)}%.`;
+
+                let correctOpt = options[0];
+                options.sort(() => 0.5 - Math.random());
+                let answer = options.indexOf(correctOpt);
+
+                generated.push({ id: i + 1, subject: subjectName, question: q, options: options, answer: answer, explanation: exp });
+            }
+            return generated;
+        }
+
+        function getSubjectQuestions(subName, count) {
+            if (subName === "Mathematics" || subName === "Further Mathematics") {
+                return generateMathQuestions(count, subName);
+            } else if (subName === "Economics") {
+                return generateEconomicsQuestions(count, subName);
+            } else {
+                let bank = questionBanks[subName] || questionBanks["English Language"];
+                let qs = [];
+                while (qs.length < count) {
+                    let batch = [...bank].map(item => ({ ...item, subject: subName })).sort(() => 0.5 - Math.random());
+                    qs = qs.concat(batch);
+                }
+                return qs.slice(0, count);
+            }
+        }
+
+        const questionBanks = {
+            "English Language": [
+                { question: "Choose nearest in meaning: His speech was filled with *redundancies*.", options: ["Clarity", "Superfluous words", "Deep wisdom", "Falsehoods"], answer: 1, explanation: "Redundancies refer to unnecessary repetition or superfluous words." },
+                { question: "Complete the sentence: The committee has agreed to look ___ the petition.", options: ["into", "at", "after", "over"], answer: 0, explanation: "'Look into' means to investigate." },
+                { question: "Identify the grammatical name: '...*who won the competition*...'", options: ["Adjective clause", "Noun clause", "Adverbial clause", "Principal clause"], answer: 0, explanation: "Qualifies a noun antecedent, hence an adjectival clause." },
+                { question: "Choose the word with the same vowel sound as 'beat':", options: ["Bit", "Leap", "Lept", "Height"], answer: 1, explanation: "'Leap' shares the /i:/ sound." },
+                { question: "Neither the teacher nor the students ___ present at the meeting.", options: ["was", "were", "is", "has been"], answer: 1, explanation: "Verb agrees with the closer subject 'students' (plural)." }
+            ],
+            "Physics": [
+                { question: "A body of mass 2kg accelerates from rest at 3m/s² for 4s. Find its kinetic energy.", options: ["72 J", "36 J", "144 J", "18 J"], answer: 0, explanation: "v = 12 m/s; KE = ½mv² = 72 J." },
+                { question: "An ideal transformer has 400 primary and 100 secondary turns. If Vp = 200V, find Vs.", options: ["50 V", "100 V", "400 V", "800 V"], answer: 0, explanation: "Vs = 200 × (100 / 400) = 50 V." },
+                { question: "Velocity of sound in air increases with an increase in:", options: ["Pressure", "Frequency", "Temperature", "Wavelength"], answer: 2, explanation: "Molecular kinetic energy rises with temperature." },
+                { question: "Calculate work done by force 50N pulling 10m at 60° to horizontal.", options: ["250 J", "500 J", "250√3 J", "500√3 J"], answer: 0, explanation: "W = Fs cos(60°) = 250 J." },
+                { question: "Which ray has the shortest wavelength in the EM spectrum?", options: ["Ultraviolet", "Gamma rays", "X-rays", "Infrared"], answer: 1, explanation: "Gamma rays have highest frequency and shortest wavelength." }
+            ],
+            "Chemistry": [
+                { question: "What volume of 0.2M NaOH neutralizes 25 cm³ of 0.1M HCl?", options: ["12.5 cm³", "25.0 cm³", "50.0 cm³", "10.0 cm³"], answer: 0, explanation: "Va = (0.1 × 25) / 0.2 = 12.5 cm³." },
+                { question: "Which element exhibits allotropy?", options: ["Sodium", "Sulphur", "Iron", "Copper"], answer: 1, explanation: "Sulphur forms rhombic and monoclinic allotropes." },
+                { question: "IUPAC name for CH3-CH2-CH(OH)-CH3 is:", options: ["Butan-1-ol", "Butan-2-ol", "2-methylpropan-1-ol", "Butanol"], answer: 1, explanation: "Hydroxyl group is on carbon 2." },
+                { question: "Catalyst used in the Haber process for ammonia is:", options: ["Vanadium oxide", "Finely divided iron", "Nickel", "MnO2"], answer: 1, explanation: "Finely divided iron is the catalyst." },
+                { question: "Calculate mass of Na2CO3 required for 250 cm³ of 0.1M solution.", options: ["2.65 g", "5.30 g", "10.60 g", "1.06 g"], answer: 0, explanation: "Mass = 0.1 × 106 × 0.25 = 2.65 g." }
+            ],
+            "Biology": [
+                { question: "In a cross between Tt and tt, the phenotypic ratio is:", options: ["3:1", "1:1", "All tall", "All dwarf"], answer: 1, explanation: "Produces 50% tall and 50% dwarf (1:1 ratio)." },
+                { question: "The mammalian kidney nephron is responsible for:", options: ["Digestion", "Ultrafiltration & selective reabsorption", "Respiration", "Bile production"], answer: 1, explanation: "Filters blood and reabsorbs water/nutrients." },
+                { question: "Which organism belongs to Cnidaria?", options: ["Planaria", "Hydra", "Earthworm", "Snail"], answer: 1, explanation: "Hydra is a cnidarian." },
+                { question: "Conversion of atmospheric nitrogen to nitrates is called:", options: ["Nitrification", "Denitrification", "Nitrogen fixation", "Ammonification"], answer: 2, explanation: "Nitrogen fixation turns N2 into nitrates." },
+                { question: "Energy flow in ecosystems is strictly:", options: ["Cyclic", "Bidirectional", "Unidirectional", "Multidirectional"], answer: 2, explanation: "Energy flows in one direction and is lost as heat." }
+            ],
+            "Government": [
+                { question: "Delegated legislation is necessary primarily because of:", options: ["Incompetence", "Complexity and technicality of modern state issues", "Lack of executive power", "Dictatorship"], answer: 1, explanation: "Parliament lacks time for technical details." },
+                { question: "Clifford Constitution of 1922 is significant because it:", options: ["Introduced elective principle", "Granted independence", "Abolished federalism", "Created 3 regions"], answer: 0 },
+                { question: "A multi-party system means:", options: ["Two parties dominate", "No party wins", "More than two political parties contest elections", "Parties are banned"], answer: 2 },
+                { question: "Public corporations are established mainly to:", options: ["Make profit", "Provide essential social services efficiently", "Compete with private firms", "Create jobs"], answer: 1 },
+                { question: "Principal organ for law implementation in a presidential system:", options: ["Legislature", "Executive", "Judiciary", "Electoral Commission"], answer: 1 }
+            ],
+            "Literature in English": [
+                { question: "An object representing a deeper abstract idea is:", options: ["Metaphor", "Symbolism", "Irony", "Satire"], answer: 1, explanation: "Symbolism signifies ideas beyond literal meaning." },
+                { question: "The main struggle opposing the protagonist is:", options: ["Resolution", "Conflict", "Climax", "Exposition"], answer: 1 },
+                { question: "A dramatic work ending in the downfall of the hero is:", options: ["Comedy", "Tragedy", "Farce", "Melodrama"], answer: 1 },
+                { question: "Rhyme scheme of a Shakespearean sonnet:", options: ["AABB CCDD", "ABAB CDCD EFEF GG", "ABBA CDDC", "Free verse"], answer: 1 },
+                { question: "Exaggerated statement used for emphasis:", options: ["Litotes", "Hyperbole", "Euphemism", "Oxymoron"], answer: 1 }
+            ],
+            "Commerce": [
+                { question: "Trade within the borders of a country is:", options: ["International trade", "Home trade", "Entrepot", "Wholesale"], answer: 1 },
+                { question: "Document issued by seller detailing goods and demanding payment:", options: ["Debit note", "Invoice", "Receipt", "Quotation"], answer: 1 },
+                { question: "Which is an invisible import?", options: ["Vehicles", "Shipping and insurance services rendered by foreigners", "Crude oil", "Machinery"], answer: 1 },
+                { question: "Reward for an entrepreneur:", options: ["Wages", "Rent", "Interest", "Profit"], answer: 3 },
+                { question: "Cooperative society is owned and controlled by:", options: ["Government", "Members/customers", "Shareholders", "Banks"], answer: 1 }
+            ],
+            "CRS": [
+                { question: "Man was created on which day according to Genesis?", options: ["Fourth", "Fifth", "Sixth", "Seventh"], answer: 2 },
+                { question: "The call of Abraham took place in:", options: ["Ur of the Chaldees", "Jerusalem", "Egypt", "Damascus"], answer: 0 },
+                { question: "Prophet who confronted Ahab over Naboth's vineyard:", options: ["Isaiah", "Elijah", "Nathan", "Amos"], answer: 1 },
+                { question: "Greatest commandment according to Jesus:", options: ["Honor parents", "Love God with all your heart", "Do not commit adultery", "Keep Sabbath"], answer: 1 },
+                { question: "Outpouring of Holy Spirit occurred during:", options: ["Passover", "Pentecost", "Tabernacles", "Unleavened Bread"], answer: 1 }
+            ],
+            "Islamic Studies (IRK)": [
+                { question: "The first Surah of the Holy Quran is:", options: ["Al-Baqarah", "Al-Fatihah", "An-Nas", "Al-Ikhlas"], answer: 1, explanation: "Surah Al-Fatihah is the opening chapter of the Holy Quran." },
+                { question: "How many compulsory daily prayers (Salah) are prescribed in Islam?", options: ["Three", "Four", "Five", "Six"], answer: 2, explanation: "There are five daily prayers: Fajr, Dhuhr, Asr, Maghrib, and Isha." },
+                { question: "The migration of Prophet Muhammad (PBUH) from Makkah to Madinah is known as:", options: ["Hajj", "Hijrah", "Isra", "Miraj"], answer: 1, explanation: "Hijrah marks the migration of the Prophet and Muslims to Madinah." },
+                { question: "Which of the following is the first pillar of Islam?", options: ["Zakat", "Salah", "Shahada (Faith)", "Sawm (Fasting)"], answer: 2, explanation: "Shahada (declaration of faith) is the foundational first pillar of Islam." },
+                { question: "The holy book revealed to Prophet Isa (Jesus) is the:", options: ["Torah", "Zabur", "Injeel", "Quran"], answer: 2, explanation: "The Injeel (Gospel) was revealed to Prophet Isa." }
+            ],
+            "Financial Accounting": [
+                { question: "Book of original entry for credit purchases:", options: ["Purchases Journal", "Sales Journal", "Cash Book", "General Journal"], answer: 0 },
+                { question: "Accounting equation:", options: ["Assets = Capital + Liabilities", "Assets = Liabilities - Capital", "Capital = Assets + Liabilities", "Liab = Assets + Cap"], answer: 0 },
+                { question: "Depreciation of fixed assets is an example of:", options: ["Capital expenditure", "Revenue expenditure", "Capital receipt", "Liability"], answer: 1 },
+                { question: "Trial balance is prepared primarily to test:", options: ["Arithmetical accuracy", "Profitability", "Financial position", "Cash level"], answer: 0 },
+                { question: "Excess of income over expenditure in non-profit org:", options: ["Net Profit", "Surplus", "Deficit", "Gross Profit"], answer: 1 }
+            ],
+            "Agricultural Science": [
+                { question: "Rearing of fish in enclosures is known as:", options: ["Apiculture", "Aquaculture", "Horticulture", "Sericulture"], answer: 1 },
+                { question: "Which is a macro-element required by plants?", options: ["Zinc", "Boron", "Nitrogen", "Copper"], answer: 2 },
+                { question: "Transmission of hereditary characters is called:", options: ["Variation", "Genetics / Heredity", "Metabolism", "Mutation"], answer: 1 },
+                { question: "A tractor is classified under:", options: ["Land", "Labor", "Capital", "Entrepreneur"], answer: 2 },
+                { question: "Vector of trypanosomiasis in cattle:", options: ["Tsetse fly", "Mosquito", "Aphid", "Weevil"], answer: 0 }
+            ],
+            "Geography": [
+                { question: "Lines joining places of equal atmospheric pressure:", options: ["Contours", "Isobars", "Isotherms", "Isohyets"], answer: 1 },
+                { question: "Instrument for measuring wind speed:", options: ["Wind vane", "Anemometer", "Barometer", "Rain gauge"], answer: 1 },
+                { question: "Weathering caused by plant roots expanding:", options: ["Chemical", "Physical", "Biological", "Exfoliation"], answer: 2 },
+                { question: "Earth rotates on its axis from:", options: ["East to West", "West to East", "North to South", "South to North"], answer: 1 },
+                { question: "Water changing directly from vapor to liquid:", options: ["Evaporation", "Condensation", "Sublimation", "Transpiration"], answer: 1 }
+            ],
+            "Civic Education": [
+                { question: "Popular participation in politics means:", options: ["Voting only", "Citizens taking active part in governance", "Obeying traffic rules", "Paying taxes"], answer: 1 },
+                { question: "Core value of citizenship:", options: ["Corruption", "Integrity", "Ethnicity", "Indiscipline"], answer: 1 },
+                { question: "Fundamental Human Rights are in which chapter of 1999 Constitution?", options: ["Chapter I", "Chapter II", "Chapter IV", "Chapter VII"], answer: 2 },
+                { question: "Excessive loyalty to ethnic group:", options: ["Nationalism", "Tribalism", "Patriotism", "Federal character"], answer: 1 },
+                { question: "NDLEA combats:", options: ["Fake drugs", "Drug trafficking and abuse", "Financial crimes", "Road accidents"], answer: 1 }
+            ],
+            "Further Mathematics": [
+                { question: "Derivative of y = 5sin(x) w.r.t x:", options: ["5cos(x)", "-5cos(x)", "5sin(x)", "-5sin(x)"], answer: 0 },
+                { question: "Determinant of matrix A = [[1,2],[3,4]]:", options: ["-2", "2", "10", "-10"], answer: 0 },
+                { question: "Evaluate integral ∫ 3x^2 dx:", options: ["x^3 + c", "3x^3 + c", "x^2 + c", "6x + c"], answer: 0 },
+                { question: "Magnitude of vector v = 3i + 4j:", options: ["5", "7", "25", "12"], answer: 0 },
+                { question: "Quadratic equation with roots 2 and 3:", options: ["x^2 - 5x + 6 = 0", "x^2 + 5x + 6 = 0", "x^2 - 5x - 6 = 0", "x^2 + 5x - 6 = 0"], answer: 0 }
+            ],
+            "History": [
+                { question: "1914 amalgamation of Nigeria was carried out by:", options: ["Donald Cameron", "Sir Frederick Lugard", "Arthur Richards", "Moorhouse"], answer: 1 },
+                { question: "Nok culture is renowned for:", options: ["Bronze casting", "Terracotta sculptures", "Iron smelting only", "Glass beads"], answer: 1 },
+                { question: "Oyo Empire reached zenith in 18th century under Alaafin:", options: ["Abiodun", "Aole", "Kori", "Ojigi"], answer: 0 },
+                { question: "Berlin Conference of 1884-85 was convened to:", options: ["Abolish slave trade", "Partition Africa among European powers", "Grant independence", "Trade routes"], answer: 1 },
+                { question: "King Jaja of Opobo was exiled because he:", options: ["Fought wars", "Protected palm oil trade monopolies against British merchants", "Refused taxes", "Attacked missionaries"], answer: 1 }
+            ]
+        };
+
+        function goToScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            if (screenId === 'screen-analytics') {
+                renderAnalytics();
+            }
+        }
+
+        function selectExam(examName) {
+            currentExam = examName;
+            isJambMock = false;
+            document.getElementById('selected-exam-title').innerText = examName;
+            goToScreen('screen-subjects');
+        }
+
+        function selectSubject(subjectName) {
+            currentSubject = subjectName;
+            isJambMock = false;
+            document.getElementById('settings-subject-label').innerText = `${currentExam} — ${subjectName}`;
+            goToScreen('screen-settings');
+        }
+
+        function startJambMockSession() {
+            isJambMock = true;
+            currentExam = "JAMB UTME Mock";
+            
+            let sub2 = document.getElementById('jamb-sub-2').value;
+            let sub3 = document.getElementById('jamb-sub-3').value;
+            let sub4 = document.getElementById('jamb-sub-4').value;
+
+            let englishQs = getSubjectQuestions("English Language", 60);
+            let sub2Qs = getSubjectQuestions(sub2, 40);
+            let sub3Qs = getSubjectQuestions(sub3, 40);
+            let sub4Qs = getSubjectQuestions(sub4, 40);
+
+            questions = englishQs.concat(sub2Qs, sub3Qs, sub4Qs);
+
+            currentIndex = 0;
+            userAnswers = {};
+            bookmarkedQuestions = {};
+            
+            goToScreen('screen-cbt');
+            loadQuestion();
+
+            if (timerInterval) clearInterval(timerInterval);
+            timeLeft = 120 * 60;
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    alert("Official JAMB time is up! Submitting exam automatically.");
+                    finishTest();
+                }
+            }, 1000);
+        }
+
+        function startCbtSession() {
+            isJambMock = false;
+            let requestedCount = parseInt(document.getElementById('setting-count').value);
+            let selectedMinutes = parseInt(document.getElementById('setting-time').value);
+
+            goToScreen('screen-cbt');
+            questions = getSubjectQuestions(currentSubject, requestedCount);
+
+            currentIndex = 0;
+            userAnswers = {};
+            bookmarkedQuestions = {};
+            loadQuestion();
+
+            if (timerInterval) clearInterval(timerInterval);
+            if (selectedMinutes > 0) {
+                timeLeft = selectedMinutes * 60;
+                updateTimerDisplay();
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        alert("Time is up! Submitting your test automatically.");
+                        finishTest();
+                    }
+                }, 1000);
+            } else {
+                document.getElementById('cbt-timer').innerHTML = `<i class="fa-regular fa-clock"></i> Untimed`;
+            }
+        }
+
+        function updateTimerDisplay() {
+            let mins = Math.floor(timeLeft / 60);
+            let secs = timeLeft % 60;
+            document.getElementById('cbt-timer').innerHTML = `<i class="fa-regular fa-clock"></i> ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function loadQuestion() {
+            let q = questions[currentIndex];
+            document.getElementById('cbt-q-counter').innerText = `Question ${currentIndex + 1} of ${questions.length}`;
+            
+            let subTag = document.getElementById('cbt-current-subject-tag');
+            subTag.innerText = `Subject: ${q.subject || currentSubject}`;
+            document.getElementById('question-text').innerText = q.question;
+
+            let bookmarkBtn = document.getElementById('btn-bookmark');
+            if (bookmarkedQuestions[currentIndex]) {
+                bookmarkBtn.className = 'bookmark-btn active';
+                bookmarkBtn.innerHTML = `<i class="fa-solid fa-bookmark"></i> Flagged`;
+            } else {
+                bookmarkBtn.className = 'bookmark-btn';
+                bookmarkBtn.innerHTML = `<i class="fa-regular fa-bookmark"></i> Flag Question`;
+            }
+
+            let container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                let isChecked = userAnswers[currentIndex] === idx ? 'checked' : '';
+                let selectedClass = userAnswers[currentIndex] === idx ? 'selected' : '';
+                
+                container.innerHTML += `
+                    <div class="option-item ${selectedClass}" onclick="selectOption(${idx})">
+                        <input type="radio" name="opt" ${isChecked}>
+                        <span>${opt}</span>
+                    </div>
+                `;
+            });
+
+            document.getElementById('btn-prev').style.display = currentIndex === 0 ? 'none' : 'block';
+            document.getElementById('btn-next').innerText = currentIndex === questions.length - 1 ? 'Submit Test' : 'Next';
+        }
+
+        function selectOption(idx) {
+            userAnswers[currentIndex] = idx;
+            loadQuestion();
+        }
+
+        function toggleBookmark() {
+            if (bookmarkedQuestions[currentIndex]) {
+                delete bookmarkedQuestions[currentIndex];
+            } else {
+                bookmarkedQuestions[currentIndex] = true;
+            }
+            loadQuestion();
+        }
+
+        function confirmExitExam() {
+            if (confirm("Are you sure you want to exit this examination? Your progress will be lost.")) {
+                if (timerInterval) clearInterval(timerInterval);
+                goToScreen('screen-home');
+            }
+        }
+
+        function nextQuestion() {
+            if (currentIndex < questions.length - 1) {
+                currentIndex++;
+                loadQuestion();
+            } else {
+                finishTest();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadQuestion();
+            }
+        }
+
+        function finishTest() {
+            if (timerInterval) clearInterval(timerInterval);
+
+            let score = 0;
+            questions.forEach((q, idx) => {
+                if (userAnswers[idx] === q.answer) score++;
+            });
+
+            let percentage = Math.round((score / questions.length) * 100);
+
+            if (isJambMock) {
+                let jambAggregate = Math.round((score / 180) * 400);
+                document.getElementById('scorecard-subtitle').innerText = "Official UTME Mock Aggregate Report";
+                document.getElementById('score-main-label').innerText = "Grand Total Aggregate Score (/400)";
+                document.getElementById('final-percentage-val').innerText = `${jambAggregate} / 400`;
+                document.getElementById('final-score-fraction').innerText = `Total Raw Score: ${score}/180 (${percentage}%)`;
+            } else {
+                document.getElementById('scorecard-subtitle').innerText = "Here is your performance breakdown";
+                document.getElementById('score-main-label').innerText = "Scaled Score Percentage";
+                document.getElementById('final-percentage-val').innerText = `${percentage}%`;
+                document.getElementById('final-score-fraction').innerText = `Raw Score: ${score}/${questions.length}`;
+            }
+
+            let reviewList = document.getElementById('scorecard-review-list');
+            reviewList.innerHTML = questions.map((q, idx) => {
+                let userAnsIdx = userAnswers[idx];
+                let userAnsText = userAnsIdx !== undefined ? q.options[userAnsIdx] : 'No Answer';
+                let correctAnsText = q.options[q.answer];
+                let isCorrect = userAnsIdx === q.answer;
+
+                return `
+                    <div class="review-item" style="border-left: 4px solid ${isCorrect ? '#34d399' : '#ef4444'};">
+                        <p style="font-size: 11px; color: #818cf8; font-weight: 700;">[${q.subject || currentSubject}]</p>
+                        <p><strong>Q${idx + 1}:</strong> ${q.question}</p>
+                        <p style="color: ${isCorrect ? '#34d399' : '#ef4444'};">Your Answer: ${userAnsText} ${isCorrect ? '✓' : '✗'}</p>
+                        ${!isCorrect ? `<p style="color: #34d399;">Correct Answer: ${correctAnsText}</p>` : ''}
+                        <p style="color: var(--text-muted); font-size: 11px; margin-top: 4px;"><strong>Explanation:</strong> ${q.explanation || 'Review standard textbook principles for this concept.'}</p>
+                    </div>
+                `;
+            }).join('');
+            
+            scoreHistory.unshift({
+                exam: currentExam,
+                subject: isJambMock ? "4-Subject Mock (Aggregate)" : currentSubject,
+                score: score,
+                total: questions.length,
+                percentage: percentage,
+                aggregate: isJambMock ? Math.round((score / 180) * 400) : null,
+                date: new Date().toLocaleDateString()
+            });
+            localStorage.setItem('passify_scores', JSON.stringify(scoreHistory));
+
+            goToScreen('screen-scorecard');
+        }
+
+        function renderAnalytics() {
+            let list = document.getElementById('analytics-history-list');
+            if (scoreHistory.length === 0) {
+                list.innerHTML = `<p style="color: var(--text-muted); font-size: 14px; text-align: center; padding: 40px 0;">No test history recorded yet.</p>`;
+                return;
+            }
+
+            list.innerHTML = scoreHistory.map(item => `
+                <div class="menu-card" style="margin-bottom: 10px; cursor: default;">
+                    <i class="fa-solid fa-trophy" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);"></i>
+                    <div class="info">
+                        <h3>${item.exam} — ${item.subject}</h3>
+                        <p>${item.aggregate ? `Aggregate: <strong>${item.aggregate}/400</strong> | ` : ''}Score: <strong>${item.score}/${item.total} (${item.percentage}%)</strong> | ${item.date}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+    </script>
+</body>
+</html>

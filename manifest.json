@@ -1,0 +1,9 @@
+{
+  "name": "passify",
+  "short_name": "passify",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#060913",
+  "theme_color": "#6366f1",
+  "description": "Premium Offline-First CBT & Learning Engine by Vortex Labs (KLASH) on behalf of Sullab"
+}
