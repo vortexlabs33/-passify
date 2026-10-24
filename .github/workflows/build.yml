@@ -1,42 +1,31 @@
-name: Deploy Passify to GitHub Pages
+name: Build Passify APK
 
 on:
   push:
     branches: [ main ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          # Uploads your entire root folder containing index.html and manifest.json
-          path: '.'
+          node-version: '18'
 
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Generate APK from HTML Web Assets
+        uses: kimhuilim/html-to-apk-action@v1
+        with:
+          build-folder-path: '.'
+          app-name: 'passify'
+          output-folder-path: 'apk'
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: passify-android-apk
+          path: apk/**/*.apk
