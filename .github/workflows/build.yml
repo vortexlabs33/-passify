@@ -122,7 +122,7 @@ jobs:
                   mavenCentral()
               }
               dependencies {
-                  classpath 'com.android.tools.build:gradle:8.1.2'
+                  classpath 'com.android.tools.build:gradle:8.2.2'
               }
           }
           allprojects {
@@ -139,18 +139,19 @@ jobs:
           rootProject.name = "passify"
           EOF
 
-          # Create gradle wrapper properties
+          # Create gradle wrapper properties pinned to 8.5
           mkdir -p gradle/wrapper
           cat << 'EOF' > gradle/wrapper/gradle-wrapper.properties
           distributionBase=GRADLE_USER_HOME
           distributionPath=wrapper/dists
-          distributionUrl=https\://services.gradle.org/distributions/gradle-8.2-bin.zip
+          distributionUrl=https\://services.gradle.org/distributions/gradle-8.5-bin.zip
           networkTimeout=10000
           validateDistributionUrl=true
           zipFileNls=true
           EOF
 
-          gradle wrapper
+          # Generate gradle wrapper script files
+          gradle wrapper --gradle-version 8.5
 
       - name: Build Debug APK
         run: chmod +x gradlew && ./gradlew assembleDebug
