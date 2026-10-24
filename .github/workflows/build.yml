@@ -139,6 +139,12 @@ jobs:
           rootProject.name = "passify"
           EOF
 
+          # Create gradle.properties with AndroidX support enabled
+          cat << 'EOF' > gradle.properties
+          android.useAndroidX=true
+          android.enableJetifier=true
+          EOF
+
           # Create gradle wrapper properties pinned to 8.5
           mkdir -p gradle/wrapper
           cat << 'EOF' > gradle/wrapper/gradle-wrapper.properties
